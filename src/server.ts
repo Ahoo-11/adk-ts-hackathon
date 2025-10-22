@@ -183,13 +183,10 @@ server.registerTool(
 // Express + HTTP transport
 const app = express();
 app.use(express.json());
+app.use("/public", express.static(process.cwd() + "/public"));
 
 app.get("/", (_req, res) => {
-  res.send(`<html><head><title>WeatherWise MCP</title></head><body>
-  <h1>WeatherWise MCP</h1>
-  <p>MCP endpoint: <code>/mcp</code>. Use MCP Inspector or a compatible client.</p>
-  <p>Basic test UI at <a href="/test">/test</a>.</p>
-  </body></html>`);
+  res.sendFile(process.cwd() + "/public/index.html");
 });
 
 app.get("/test", (_req, res) => {

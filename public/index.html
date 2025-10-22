@@ -1,83 +1,118 @@
 <!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>WeatherWise - Test UI</title>
-    <style>
-      body { font-family: system-ui, sans-serif; margin: 2rem; }
-      input, select, button { padding: 0.5rem; margin: 0.25rem; }
-      .row { margin-bottom: 1rem; }
-      pre { background: #f5f5f7; padding: 1rem; border-radius: 8px; overflow: auto; }
-      .card { border: 1px solid #ddd; padding: 1rem; border-radius: 8px; margin-top: 1rem; }
-    </style>
-  </head>
-  <body>
-    <h1>WeatherWise - Test UI</h1>
-    <p>Quickly test current weather and forecast via simple REST wrappers. MCP endpoint available at <code>/mcp</code>.</p>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WeatherWise MCP — Setup & Playground</title>
+  <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body>
+  <div class="hero">
+    <h1>WeatherWise MCP</h1>
+    <p class="tagline">Smart weather data for agents. Connect via MCP or use REST.</p>
+    <div class="pill">Server: <span id="baseUrl"></span> • MCP: <span id="mcpUrl"></span></div>
+  </div>
 
-    <div class="card">
-      <h2>Location</h2>
-      <div class="row">
-        <label>City <input id="city" placeholder="e.g., London" /></label>
-        <label>Country <input id="country" placeholder="e.g., UK" /></label>
+  <main class="container">
+    <section class="card">
+      <h2>Connect via MCP Inspector</h2>
+      <p>Use the official Inspector to connect to this MCP server.</p>
+      <div class="code-row">
+        <pre id="cmdInspector">npx @modelcontextprotocol/inspector</pre>
+        <button class="copy" data-target="cmdInspector">Copy</button>
       </div>
-      <div class="row">
-        <label>Latitude <input id="lat" type="number" step="0.0001" /></label>
-        <label>Longitude <input id="lon" type="number" step="0.0001" /></label>
+      <div class="code-row">
+        <pre id="connectUrl">http://localhost:3000/mcp</pre>
+        <button class="copy" data-target="connectUrl">Copy URL</button>
       </div>
-      <div class="row">
-        <label>Units 
+    </section>
+
+    <section class="card">
+      <h2>Start the Dev Server</h2>
+      <p>Start (PowerShell) on the current port, or change it.</p>
+      <div class="code-row">
+        <pre id="cmdStart">npm run dev:http</pre>
+        <button class="copy" data-target="cmdStart">Copy</button>
+      </div>
+      <div class="code-row">
+        <pre id="cmdStartPort">$env:PORT=3000; npm run dev:http</pre>
+        <button class="copy" data-target="cmdStartPort">Copy</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>ADK-TS Agent (REST) Example</h2>
+      <p>Paste this into a script to query WeatherWise via REST endpoints.</p>
+      <div class="code-row">
+        <pre id="adkSnippet">import { AgentBuilder } from "@iqai/adk";
+import { HttpRequestTool } from "@iqai/adk/tools/http";
+
+async function main() {
+  const { agent, runner } = await AgentBuilder
+    .create("weatherwise_demo")
+    .withDescription("Agent that queries WeatherWise REST endpoints.")
+    .withInstruction("Use the local WeatherWise REST endpoints.")
+    .withModel("gemini-2.5-flash")
+    .withTools(new HttpRequestTool())
+    .build();
+
+  const q = `What's the 3-day forecast for London, UK? Use ${location.origin}/api/forecast?city=London&country=UK&days=3`;
+  const res = await runner.ask(q);
+  console.log(res.text ?? res);
+}
+main();</pre>
+        <button class="copy" data-target="adkSnippet">Copy</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>REST Playground</h2>
+      <div class="grid">
+        <div>
+          <label>City</label>
+          <input id="city" placeholder="London" />
+        </div>
+        <div>
+          <label>Country</label>
+          <input id="country" placeholder="UK" />
+        </div>
+        <div>
+          <label>Units</label>
           <select id="units">
-            <option value="metric">metric (°C, kph)</option>
-            <option value="imperial">imperial (°F, mph)</option>
+            <option value="metric" selected>metric</option>
+            <option value="imperial">imperial</option>
           </select>
-        </label>
+        </div>
+        <div>
+          <label>Days</label>
+          <input id="days" type="number" min="1" max="7" value="3" />
+        </div>
       </div>
-      <div class="row">
+      <div class="actions">
         <button id="btnCurrent">Get Current</button>
         <button id="btnForecast">Get Forecast</button>
-        <label>Days <input id="days" type="number" min="1" max="7" value="3" /></label>
       </div>
-    </div>
+      <pre id="output" class="output">Ready.</pre>
+    </section>
 
-    <div class="card">
-      <h2>Result</h2>
-      <pre id="out">(waiting)</pre>
-    </div>
+    <section class="card">
+      <h2>.env Setup</h2>
+      <p>Set at least one provider key to enable data.</p>
+      <div class="code-row">
+        <pre id="envSnippet">OPENWEATHER_API_KEY=your_openweather_key
+WEATHERAPI_API_KEY=your_weatherapi_key
+PORT=3000
+DEFAULT_UNITS=metric
+CACHE_TTL_SECONDS=600
+FORECAST_CACHE_TTL_SECONDS=10800
+ALERT_POLL_INTERVAL_SECONDS=600
+# Optional for ADK agent
+GOOGLE_API_KEY=your_gemini_key</pre>
+        <button class="copy" data-target="envSnippet">Copy</button>
+      </div>
+    </section>
+  </main>
 
-    <script>
-      const el = id => document.getElementById(id);
-      function paramsFromInputs() {
-        const city = el('city').value.trim();
-        const country = el('country').value.trim();
-        const lat = el('lat').value.trim();
-        const lon = el('lon').value.trim();
-        const units = el('units').value;
-        const q = new URLSearchParams();
-        if (city) q.set('city', city);
-        if (country) q.set('country', country);
-        if (lat) q.set('lat', lat);
-        if (lon) q.set('lon', lon);
-        if (units) q.set('units', units);
-        return q;
-      }
-
-      el('btnCurrent').addEventListener('click', async () => {
-        const q = paramsFromInputs();
-        const res = await fetch(`/api/current?${q.toString()}`);
-        const data = await res.json();
-        el('out').textContent = JSON.stringify(data, null, 2);
-      });
-
-      el('btnForecast').addEventListener('click', async () => {
-        const q = paramsFromInputs();
-        const days = el('days').value;
-        if (days) q.set('days', days);
-        const res = await fetch(`/api/forecast?${q.toString()}`);
-        const data = await res.json();
-        el('out').textContent = JSON.stringify(data, null, 2);
-      });
-    </script>
-  </body>
+  <script src="/public/app.js"></script>
+</body>
 </html>
