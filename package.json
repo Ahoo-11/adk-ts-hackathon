@@ -4,15 +4,22 @@
   "private": true,
   "description": "WeatherWise MCP: Smart Weather Data Integration server built with TypeScript. Multi-source weather data, insights, and alerts via MCP.",
   "type": "module",
+  "bin": {
+    "weatherwise-mcp": "dist/cli.js"
+  },
   "engines": {
     "node": ">=20.11"
   },
   "scripts": {
     "dev:mcp": "tsx src/server.ts",
     "dev:http": "tsx src/server.ts",
+    "dev:cli:stdio": "tsx src/cli.ts --transport=stdio",
+    "dev:cli:http": "tsx src/cli.ts --transport=http --port 3000",
     "build": "tsc",
     "start:mcp": "node dist/server.js",
-    "start:http": "node dist/server.js"
+    "start:http": "node dist/server.js",
+    "start:cli:stdio": "node dist/cli.js --transport=stdio",
+    "start:cli:http": "node dist/cli.js --transport=http --port 3000"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",

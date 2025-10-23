@@ -2,11 +2,12 @@ import express from "express";
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { config, hasProviderKeys } from "./config";
-import { getCurrentWeather, getForecast, getHistorical } from "./weather/aggregator";
-import type { LocationQuery } from "./weather/types";
-import { assessActivity } from "./insights/insights";
-import { listAlerts, registerAlert, removeAlert, startAlertScheduler } from "./alerts/alertService";
+import { config, hasProviderKeys } from "./config.js";
+import { getCurrentWeather, getForecast, getHistorical } from "./weather/aggregator.js";
+import type { LocationQuery } from "./weather/types.js";
+import { assessActivity } from "./insights/insights.js";
+import { listAlerts, registerAlert, removeAlert, startAlertScheduler } from "./alerts/alertService.js";
+import { initializeWeatherAgent, getWeatherInsights, getEnhancedWeatherSummary } from "./agents/weatherAgent.js";
 
 // Create MCP server
 const server = new McpServer({
@@ -36,7 +37,7 @@ server.registerTool(
     const data = await getCurrentWeather(location, units);
     return {
       content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
-      structuredContent: data,
+      structuredContent: { data },
     };
   }
 );
@@ -53,7 +54,24 @@ server.registerTool(
     const data = await getForecast(location, units, days ?? 3);
     return {
       content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
-      structuredContent: data,
+      structuredContent: { data },
+    };
+  }
+);
+
+server.registerTool(
+  "get_weather_summary",
+  {
+    title: "AI Weather Summary",
+    description: "Get an intelligent, human-friendly weather summary using ADK-TS agent analysis.",
+    inputSchema: { location: LocationSchema, days: z.number().min(1).max(7).optional() },
+    outputSchema: {}
+  },
+  async ({ location, days }: { location: LocationQuery; days?: number }) => {
+    const summary = await getEnhancedWeatherSummary(location, days);
+    return {
+      content: [{ type: "text", text: summary }],
+      structuredContent: { location, days, summary },
     };
   }
 );
@@ -70,7 +88,7 @@ server.registerTool(
     const data = await getHistorical(location, dateISO);
     return {
       content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
-      structuredContent: data,
+      structuredContent: { data },
     };
   }
 );
@@ -78,18 +96,16 @@ server.registerTool(
 server.registerTool(
   "weather_insights",
   {
-    title: "Weather Insights",
-    description: "Translate weather into practical recommendations for an activity.",
+    title: "AI Weather Insights",
+    description: "Get intelligent weather analysis and recommendations for an activity using ADK-TS agent.",
     inputSchema: { activity: z.string(), location: LocationSchema },
     outputSchema: {}
   },
   async ({ activity, location }: { activity: string; location: LocationQuery }) => {
-    const current = await getCurrentWeather(location);
-    const forecast = await getForecast(location);
-    const insight = assessActivity(activity, current, forecast);
+    const insights = await getWeatherInsights(activity, location);
     return {
-      content: [{ type: "text", text: JSON.stringify(insight, null, 2) }],
-      structuredContent: insight,
+      content: [{ type: "text", text: insights }],
+      structuredContent: { activity, location, insights },
     };
   }
 );
@@ -124,7 +140,7 @@ server.registerTool(
     });
     return {
       content: [{ type: "text", text: JSON.stringify(alert, null, 2) }],
-      structuredContent: alert,
+      structuredContent: { alert },
     };
   }
 );
@@ -141,7 +157,7 @@ server.registerTool(
     const items = listAlerts();
     return {
       content: [{ type: "text", text: JSON.stringify(items, null, 2) }],
-      structuredContent: items,
+      structuredContent: { items },
     };
   }
 );
@@ -175,7 +191,7 @@ server.registerTool(
     const status = hasProviderKeys();
     return {
       content: [{ type: "text", text: JSON.stringify(status, null, 2) }],
-      structuredContent: status,
+      structuredContent: { status },
     };
   }
 );
@@ -235,7 +251,11 @@ app.post("/mcp", async (req, res) => {
   await transport.handleRequest(req, res, req.body);
 });
 
-app.listen(config.port, () => {
+app.listen(config.port, async () => {
   console.log(`WeatherWise MCP running on http://localhost:${config.port}/mcp`);
+  
+  // Initialize the ADK-TS weather agent
+  await initializeWeatherAgent();
+  
   startAlertScheduler();
 });

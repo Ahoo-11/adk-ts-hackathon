@@ -1,4 +1,4 @@
-import type { CurrentWeather, Forecast } from "../weather/types";
+import type { CurrentWeather, Forecast } from "../weather/types.js";
 
 export interface InsightResult {
   activity: string;

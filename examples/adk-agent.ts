@@ -1,33 +1,59 @@
 /**
- * WeatherWise MCP + ADK-TS Agent Example
+ * WeatherWise MCP + ADK-TS Integration Example
  *
- * This example shows how to build an ADK-TS agent and let it call WeatherWise via HTTP endpoints.
- * If you prefer MCP-native integration, you can use MCP Inspector or your IDE to connect directly to /mcp.
+ * This example demonstrates how ADK-TS is integrated WITHIN the WeatherWise MCP server.
+ * The MCP tools themselves use ADK-TS agents internally to provide intelligent responses.
+ *
+ * To test the integration:
+ * 1. Start WeatherWise MCP server: npm run dev:http
+ * 2. Use MCP Inspector: npx @modelcontextprotocol/inspector
+ * 3. Connect to: http://localhost:3000/mcp
+ * 4. Try the AI-powered tools: weather_insights, get_weather_summary
  *
  * Requirements:
- * - npm i @iqai/adk
- * - Set one LLM provider key (e.g., GOOGLE_API_KEY for Gemini or OPENAI_API_KEY for OpenAI)
- * - Start WeatherWise server on http://localhost:3000
+ * - Set LLM provider key (GOOGLE_API_KEY or OPENAI_API_KEY) in .env
+ * - The ADK-TS agent runs inside the MCP server, not as a separate client
  */
 
 import { AgentBuilder } from "@iqai/adk";
-// HttpRequestTool is a generic web request tool in ADK that allows the agent to call REST APIs.
-import { HttpRequestTool } from "@iqai/adk/tools/http";
+import { McpClientTool } from "@iqai/adk/tools/mcp";
 
 async function main() {
-  const { agent, runner } = await AgentBuilder
-    .create("weatherwise_demo")
-    .withDescription("Agent that queries WeatherWise REST endpoints to get weather and forecast.")
-    .withInstruction("When asked for weather, call the local WeatherWise REST endpoints (http://localhost:3000/api/current and /api/forecast).")
-    // Pick a model provider you have keys for. Example uses Gemini; you can change to OpenAI etc.
-    .withModel("gemini-2.5-flash")
-    .withTools(new HttpRequestTool())
-    .build();
+  console.log("=== WeatherWise MCP + ADK-TS Integration Demo ===\n");
+  
+  console.log("This example shows ADK-TS integrated WITHIN the MCP server.");
+  console.log("The MCP tools use ADK-TS agents internally for intelligent responses.\n");
+  
+  console.log("To test the integration:");
+  console.log("1. Start WeatherWise MCP server: npm run dev:http");
+  console.log("2. Use MCP Inspector: npx @modelcontextprotocol/inspector");
+  console.log("3. Connect to: http://localhost:3000/mcp");
+  console.log("4. Try AI-powered tools:");
+  console.log("   - weather_insights: Get intelligent activity recommendations");
+  console.log("   - get_weather_summary: Get conversational weather summaries");
+  console.log("   - Standard tools: get_current_weather, get_forecast, etc.\n");
+  
+  // Example of how you could use MCP client to connect to the server
+  // (This requires the MCP server to be running)
+  try {
+    const { agent, runner } = await AgentBuilder
+      .create("mcp_client_demo")
+      .withDescription("Demo agent that connects to WeatherWise MCP server")
+      .withInstruction("Use the WeatherWise MCP tools to get weather information and insights.")
+      .withModel("gemini-2.5-flash")
+      .withTools(new McpClientTool("http://localhost:3000/mcp"))
+      .build();
 
-  // Prompt guiding the agent to use the REST tools
-  const question = `What's the 3-day forecast for London, UK? Use http://localhost:3000/api/forecast?city=London&country=UK&days=3`;
-  const response = await runner.ask(question);
-  console.log("Agent response:\n", response.text ?? response);
+    const question = "What are the weather insights for running in London, UK today?";
+    console.log(`Question: ${question}`);
+    
+    const response = await runner.ask(question);
+    console.log("MCP Response:\n", response.text ?? response);
+  } catch (error) {
+    console.log("MCP client demo failed (server may not be running):", error.message);
+    console.log("\nThe main integration is inside the MCP server itself.");
+    console.log("Use MCP Inspector to test the AI-powered tools directly.");
+  }
 }
 
 main().catch((err) => {

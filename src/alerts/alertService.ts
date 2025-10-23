@@ -1,7 +1,7 @@
 import axios from "axios";
-import { config } from "../config";
-import type { LocationQuery } from "../weather/types";
-import { getCurrentWeather, getForecast } from "../weather/aggregator";
+import { config } from "../config.js";
+import type { LocationQuery } from "../weather/types.js";
+import { getCurrentWeather, getForecast } from "../weather/aggregator.js";
 
 export type AlertConditionType = "rain" | "temp_above" | "temp_below" | "wind_above";
 

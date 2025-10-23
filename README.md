@@ -109,3 +109,75 @@ Deployment
 
 License
 MIT
+
+## CLI Usage
+
+Build once:
+```
+npm run build
+```
+
+Start in STDIO mode (compiled):
+```
+npm run start:cli:stdio
+# or
+node dist/cli.js --transport=stdio
+```
+
+Start in HTTP mode (compiled):
+```
+npm run start:cli:http
+# or
+node dist/cli.js --transport=http --port 3000
+```
+
+Dev (no compile):
+```
+npm run dev:cli:stdio
+npm run dev:cli:http
+```
+
+Optional global binary:
+```
+npm link
+weatherwise-mcp --transport=stdio
+weatherwise-mcp --transport=http --port 3000
+```
+
+## MCP JSON Config Examples
+
+STDIO (e.g., OpenAI Desktop, Cursor, etc.):
+```json
+{
+  "mcpServers": {
+    "weatherwise-mcp": {
+      "command": "node",
+      "args": ["D:/New folder/adk-ts-hackathon/dist/cli.js", "--transport=stdio"],
+      "env": {
+        "OPENWEATHER_API_KEY": "your_openweather_key",
+        "WEATHERAPI_API_KEY": "your_weatherapi_key",
+        "DEFAULT_UNITS": "metric"
+      }
+    }
+  }
+}
+```
+
+HTTP transport:
+```json
+{
+  "mcpServers": {
+    "weatherwise-mcp": {
+      "transport": {
+        "type": "http",
+        "url": "http://localhost:3000/mcp"
+      }
+    }
+  }
+}
+```
+
+MCP Inspector:
+- Run: `npx @modelcontextprotocol/inspector`
+- STDIO: Command `weatherwise-mcp --transport=stdio` (or `node dist/cli.js --transport=stdio`)
+- HTTP: URL `http://localhost:3000/mcp`

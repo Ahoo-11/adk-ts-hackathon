@@ -1,8 +1,8 @@
 import { LRUCache } from "lru-cache";
-import { config, Units } from "../config";
-import type { CurrentWeather, Forecast, HistoricalWeather, LocationQuery } from "./types";
-import * as ow from "./providers/openWeather";
-import * as wa from "./providers/weatherApi";
+import { config, Units } from "../config.js";
+import type { CurrentWeather, Forecast, HistoricalWeather, LocationQuery } from "./types.js";
+import * as ow from "./providers/openWeather.js";
+import * as wa from "./providers/weatherApi.js";
 
 const currentCache = new LRUCache<string, CurrentWeather>({
   max: 500,

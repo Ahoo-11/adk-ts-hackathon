@@ -1,6 +1,6 @@
 import axios from "axios";
-import { config } from "../../config";
-import { CurrentWeather, Forecast, ForecastDay, LocationQuery } from "../types";
+import { config } from "../../config.js";
+import { CurrentWeather, Forecast, ForecastDay, LocationQuery } from "../types.js";
 
 function unitsParam(units: "metric" | "imperial") {
   return units === "imperial" ? "imperial" : "metric";

@@ -1,6 +1,6 @@
 import axios from "axios";
-import { config } from "../../config";
-import { CurrentWeather, Forecast, ForecastDay, HistoricalWeather, LocationQuery } from "../types";
+import { config } from "../../config.js";
+import { CurrentWeather, Forecast, ForecastDay, HistoricalWeather, LocationQuery } from "../types.js";
 
 function resolveQuery(q: LocationQuery) {
   if (q.lat != null && q.lon != null) return `${q.lat},${q.lon}`;
